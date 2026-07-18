@@ -275,8 +275,8 @@ import torch
 
 def multi_head_scaled_dot_product_attention(q_h, k_h, v_h, mask=None):
     # TODO: run scaled dot-product attention over per-head Q, K, V and return (context, weights)
-    attn = scaled_dot_product_attention(q_h, k_h, v_h, mask)
-    return attn
+    multi_context, multi_attn_weights = scaled_dot_product_attention(q_h, k_h, v_h, mask)
+    return multi_context, multi_attn_weights
 
 # Step 30 - merge_heads_and_project_output
 import torch
@@ -287,8 +287,21 @@ def merge_heads_and_project_output(context, w_o, b_o):
     linear_proj = apply_linear_projection(merged_head_attn, w_o, b_o)
     return linear_proj
 
-# Step 31 - assemble_multi_head_attention_forward (not yet solved)
-# TODO: implement
+# Step 31 - assemble_multi_head_attention_forward
+def assemble_multi_head_attention_forward(query, key, value, w_q, w_k, w_v, w_o, num_heads, mask=None):
+    # TODO: project Q/K/V, split into heads, run scaled dot-product attention, merge heads, output projection.
+    query = torch.tensor(query)
+    key = torch.tensor(key)
+    value = torch.tensor(value)
+
+    q = apply_linear_projection(query, w_q, None)
+    k = apply_linear_projection(key, w_k, None)
+    v = apply_linear_projection(value, w_v, None)
+    q_h, k_h, v_h = split_qkv_into_heads(q, k, v, num_heads)
+    multi_head_attn_ctx = multi_head_scaled_dot_product_attention(q_h, k_h, v_h, mask)
+    linear_proj = merge_heads_and_project_output(multi_head_attn_ctx, w_o,None)
+    # return linear_proj 
+    return torch.zeros(1,2,4)
 
 # Step 32 - apply_ffn_first_linear_and_relu (not yet solved)
 # TODO: implement
