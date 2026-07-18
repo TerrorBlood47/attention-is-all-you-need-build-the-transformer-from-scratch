@@ -425,8 +425,44 @@ def decoder_layer_feed_forward_sublayer(y, w1, b1, w2, b2, gamma, beta):
     x = apply_residual_add_and_norm(y, decoder_pos_ffn, gamma, beta)
     return x
 
-# Step 46 - assemble_decoder_layer (not yet solved)
-# TODO: implement
+# Step 46 - assemble_decoder_layer
+def assemble_decoder_layer(y, encoder_output, layer_params, num_heads, src_mask, tgt_mask):
+    """Run a full decoder layer: masked self-attention, cross-attention, then FFN."""
+    # TODO: chain the three decoder sublayers using params from layer_params.
+    
+    # print(layer_params.keys())
+
+    (
+        w_q_self, w_k_self, w_v_self, w_o_self,
+        self_gamma, self_beta,
+        w_q_cross, w_k_cross, w_v_cross, w_o_cross,
+        cross_gamma, cross_beta,
+        w1, b1, w2, b2,
+        ffn_gamma, ffn_beta
+    ) = (
+        layer_params["w_q_self"], layer_params["w_k_self"],
+        layer_params["w_v_self"], layer_params["w_o_self"],
+        layer_params["self_gamma"], layer_params["self_beta"],
+        layer_params["w_q_cross"], layer_params["w_k_cross"],
+        layer_params["w_v_cross"], layer_params["w_o_cross"],
+        layer_params["cross_gamma"], layer_params["cross_beta"],
+        layer_params["w1"], layer_params["b1"],
+        layer_params["w2"], layer_params["b2"],
+        layer_params["ffn_gamma"], layer_params["ffn_beta"],
+    )
+    
+    self_attn_sublayer_output = decoder_layer_masked_self_attention_sublayer(y, w_q_self, \
+    w_k_self, w_v_self, w_o_self, self_gamma, self_beta, num_heads, tgt_mask)
+
+    cross_attn_sublayer_output = decoder_layer_cross_attention_sublayer( \
+    self_attn_sublayer_output,encoder_output \
+    , w_q_cross, w_k_cross, w_v_cross, w_o_cross \
+    , cross_gamma, cross_beta, num_heads, src_mask)
+    
+    ffn_output = decoder_layer_feed_forward_sublayer(cross_attn_sublayer_output, \
+    w1, b1, w2, b2, ffn_gamma, ffn_beta)
+
+    return ffn_output
 
 # Step 47 - stack_decoder_layers (not yet solved)
 # TODO: implement
