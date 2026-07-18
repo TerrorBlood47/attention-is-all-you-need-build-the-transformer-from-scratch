@@ -244,8 +244,13 @@ def merge_heads_back_to_model_dim(multi_head_tensor):
     # TODO: merge the head axis back into the feature axis to reconstruct d_model
     return multi_head_tensor.transpose(1,2).flatten(start_dim=-2, end_dim=-1)
 
-# Step 26 - apply_linear_projection (not yet solved)
-# TODO: implement
+# Step 26 - apply_linear_projection
+def apply_linear_projection(x, weight, bias):
+    # TODO: return x @ weight^T + bias (bias may be None) with shape (..., out_features)
+    if bias is None:
+        return x @ weight.transpose(-2,-1)
+    
+    return x @ weight.transpose(-2,-1) + bias
 
 # Step 27 - project_to_query_key_value (not yet solved)
 # TODO: implement
