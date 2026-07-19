@@ -487,7 +487,6 @@ def tie_output_projection_to_token_embeddings(token_embedding_weight):
     Input shape: (vocab_size, d_model). Output shape: (d_model, vocab_size).
     """
     # TODO: return an output projection weight tied to the token embedding matrix
-    # V, D = token_embedding_weight.shape
     return token_embedding_weight.transpose(0,1)
 
 # Step 50 - apply_log_softmax_over_vocab (not yet solved)
