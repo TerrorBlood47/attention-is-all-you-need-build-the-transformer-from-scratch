@@ -132,7 +132,7 @@ import torch
 
 def add_positional_encoding_to_embeddings(embedded_batch, positional_encoding):
     # TODO: add the first L rows of positional_encoding to embedded_batch and return the sum.
-    L = min(embedded_batch.shape[1], positional_encoding.shape[1]) # min(L_batch, max_len)
+    L = min(embedded_batch.shape[1], positional_encoding.shape[0]) # min(L_batch, max_len)
     positional_encoding = positional_encoding[:L, :]
     return embedded_batch + positional_encoding
 
@@ -494,8 +494,45 @@ def apply_log_softmax_over_vocab(logits):
     # TODO: Convert decoder logits (B, T, V) into log probabilities over the vocabulary axis.
     return torch.nn.LogSoftmax(dim=-1)(logits)
 
-# Step 51 - run_transformer_forward (not yet solved)
-# TODO: implement
+# Step 51 - run_transformer_forward
+def run_transformer_forward(src_ids, tgt_ids, model_params, num_heads, pad_id):
+    # TODO: embed src+tgt, add PE, build masks, run encoder/decoder, project to log probs.
+    token_embedding, encoder_layers_params, decoder_layers_params, output_projection_weight = (
+        model_params["token_embedding"],
+        model_params["encoder_layers"],
+        model_params["decoder_layers"],
+        model_params["output_projection"],
+    )
+    d_model = token_embedding.shape[1]
+    S, T = src_ids.shape[1], tgt_ids.shape[1]
+    max_seq_len = max(S,T)
+
+    batched_input_embeds = scale_embeddings_by_sqrt_d_model(token_embedding[src_ids], d_model)
+    batched_output_embeds = scale_embeddings_by_sqrt_d_model(token_embedding[tgt_ids], d_model)
+
+    src_mask = build_padding_mask(src_ids, pad_id)
+
+    tgt_padding_mask = build_padding_mask(tgt_ids, pad_id)
+    tgt_causal_mask = build_causal_mask(T)
+    tgt_mask = combine_padding_and_causal_masks(tgt_padding_mask, tgt_causal_mask)
+
+    pos_encoded_input_batch = add_positional_encoding_to_embeddings(batched_input_embeds, 
+    build_sinusoidal_positional_encoding(max_seq_len, d_model))
+    pos_encoded_output_batch = add_positional_encoding_to_embeddings(batched_output_embeds, 
+    build_sinusoidal_positional_encoding(max_seq_len, d_model))
+
+    encoder_output = stack_encoder_layers(pos_encoded_input_batch, encoder_layers_params\
+    ,num_heads, src_mask )
+
+    decoder_output = stack_decoder_layers(pos_encoded_output_batch, \
+    encoder_output, decoder_layers_params, num_heads, src_mask, tgt_mask)
+
+    logits = apply_final_output_projection(decoder_output, \
+    output_projection_weight, None) # this output project weight is transposed token embedding
+
+    log_probs = apply_log_softmax_over_vocab(logits)
+
+    return log_probs
 
 # Step 52 - init_encoder_layer_parameters (not yet solved)
 # TODO: implement
