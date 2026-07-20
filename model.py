@@ -732,8 +732,16 @@ def compute_label_smoothed_kl_loss(log_probabilities, smoothed_distribution):
     # TODO: combine log_probabilities with the smoothed target distribution into a scalar loss
     return torch.sum(-log_probabilities * smoothed_distribution)
 
-# Step 62 - average_loss_over_non_pad_tokens (not yet solved)
-# TODO: implement
+# Step 62 - average_loss_over_non_pad_tokens
+import torch
+
+def average_loss_over_non_pad_tokens(total_loss, gold_token_ids, pad_id):
+    # TODO: divide total_loss by the count of non-pad tokens in gold_token_ids
+    N = torch.sum(gold_token_ids != pad_id)
+    
+    loss_per_token = total_loss / max(N, 1)
+    
+    return torch.tensor(loss_per_token)
 
 # Step 63 - compute_token_accuracy_ignoring_pad (not yet solved)
 # TODO: implement
