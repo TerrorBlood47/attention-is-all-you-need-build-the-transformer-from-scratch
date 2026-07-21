@@ -670,7 +670,7 @@ def shift_targets_right_with_start_token(target_ids, start_token_id):
     batches = []
     
     for batch in target_ids:
-        new_batch = torch.cat((torch.tensor([start_token_id])\
+        new_batch = torch.cat((batch.new_tensor([start_token_id])\
         , batch[:-1]), dim=0)
         batches.append(new_batch)
 
