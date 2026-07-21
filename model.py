@@ -739,9 +739,11 @@ def average_loss_over_non_pad_tokens(total_loss, gold_token_ids, pad_id):
     # TODO: divide total_loss by the count of non-pad tokens in gold_token_ids
     N = torch.sum(gold_token_ids != pad_id)
     
-    loss_per_token = total_loss / max(N, 1)
+    loss_per_token = total_loss / torch.clamp(N, min=1)
+
+    # print(loss_per_token.requires_grad) # should be True in the real training
     
-    return torch.tensor(loss_per_token)
+    return loss_per_token
 
 # Step 63 - compute_token_accuracy_ignoring_pad
 import torch
@@ -843,7 +845,7 @@ def zero_all_parameter_gradients(parameter_list):
 # Step 71 - compute_batch_training_loss
 def compute_batch_training_loss(src_batch, tgt_batch, model_params, config):
     # TODO: shift targets right, run the forward pass, build smoothed targets, and average the KL loss over non-pad tokens.
-    pad_id, start_token_id, vocab_size, smoothing_dist, num_heads = (
+    pad_id, start_token_id, vocab_size, smoothing_eps, num_heads = (
         config["pad_id"],
         config["start_id"],
         config["vocab_size"],
@@ -851,18 +853,38 @@ def compute_batch_training_loss(src_batch, tgt_batch, model_params, config):
         config["num_heads"],
     )
 
+    confidence = 1 - smoothing_eps
+    # print(model_params.keys())
+    # print(tgt_batch.shape)
+
+    model_params['token_embedding'] = torch.cat([model_params['src_embedding'] ,\
+                                        model_params['tgt_embedding'] ])
+
     shifted_tgt_batch = shift_targets_right_with_start_token(tgt_batch, start_token_id)
 
 
     log_probs = run_transformer_forward(src_batch, shifted_tgt_batch, model_params,\
     num_heads, pad_id)
 
-    # label_smoothed_kl_loss = compute_label_smoothed_kl_loss(log_probs, smoothing_dist)
+    shape = torch.tensor([tgt_batch.shape[0], \
+    tgt_batch.shape[1], vocab_size])
 
-    # avg_loss_over_non_pad_ids = average_loss_over_non_pad_tokens(label_smoothed_kl_loss,\
-    # tgt_batch, pad_id)
+    smoothed_tgt_dist = build_uniform_smoothing_distribution(shape, \
+    vocab_size, smoothing_eps)
 
-    avg_loss_over_non_pad_ids = torch.tensor(0)
+    smoothed_tgt_dist = set_confidence_on_gold_tokens(smoothed_tgt_dist, \
+    tgt_batch, confidence)
+
+    smoothed_tgt_dist = zero_pad_column_and_pad_token_rows(smoothed_tgt_dist,\
+    tgt_batch, pad_id)
+
+    label_smoothed_kl_loss = compute_label_smoothed_kl_loss(log_probs, smoothed_tgt_dist)
+
+    avg_loss_over_non_pad_ids = average_loss_over_non_pad_tokens(label_smoothed_kl_loss,\
+    tgt_batch, pad_id)
+
+
+    # avg_loss_over_non_pad_ids = torch.tensor(0)
     return avg_loss_over_non_pad_ids
 
 # Step 72 - run_training_step_with_backprop (not yet solved)
