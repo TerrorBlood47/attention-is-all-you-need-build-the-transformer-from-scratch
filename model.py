@@ -689,7 +689,13 @@ import torch
 def build_uniform_smoothing_distribution(shape, vocab_size, epsilon):
     # TODO: return a float tensor of `shape` filled with epsilon / (vocab_size - 2).
     batch, tgt_seq, _ = shape
-    return torch.tensor([[[(epsilon / (vocab_size - 2))]*vocab_size]*tgt_seq]*batch)
+    # return torch.tensor([[[(epsilon / (vocab_size - 2))]*vocab_size]*tgt_seq]*batch) # wont work with .backward
+
+    return torch.full(
+        size=(batch, tgt_seq, vocab_size),
+        fill_value = (epsilon / (vocab_size - 2)),
+        requires_grad=True
+    )
 
 # Step 59 - set_confidence_on_gold_tokens
 import torch
