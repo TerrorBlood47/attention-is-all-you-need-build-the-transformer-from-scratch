@@ -894,8 +894,42 @@ def compute_batch_training_loss(src_batch, tgt_batch, model_params, config):
     # avg_loss_over_non_pad_ids = torch.tensor(0)
     return avg_loss_over_non_pad_ids
 
-# Step 72 - run_training_step_with_backprop (not yet solved)
-# TODO: implement
+# Step 72 - run_training_step_with_backprop
+import torch
+
+def run_training_step_with_backprop(src_batch, tgt_batch, parameter_list, model_params, \
+optimizer_state, step_number, config):
+    """Run one training iteration: zero grads, forward, backward, Noam LR, Adam step.
+
+    Returns the scalar loss value for the step as a Python float.
+    """
+    # TODO: zero grads, compute loss, backward, look up Noam LR, apply Adam step
+    
+    d_model, warmup_steps = config['d_model'], config['warmup_steps']
+
+    kwargs = {}
+    if "beta1" in config:
+        kwargs["beta1"] = config["beta1"]
+
+    if "beta2" in config:
+        kwargs["beta2"] = config["beta2"]
+
+    if "epsilon" in config:
+        kwargs["epsilon"] = config["epsilon"]
+
+    zero_all_parameter_gradients(parameter_list)
+
+    batch_loss = compute_batch_training_loss(src_batch,\
+    tgt_batch, model_params, config)
+
+    batch_loss.backward()
+
+    noam_lr = compute_noam_learning_rate(step_number, d_model, warmup_steps)
+
+    new_optimizer_state = apply_adam_step_to_all_parameters(parameter_list,\
+    optimizer_state, noam_lr, **kwargs)
+
+    return batch_loss.item()
 
 # Step 73 - run_training_loop_for_steps (not yet solved)
 # TODO: implement
