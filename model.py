@@ -926,7 +926,7 @@ optimizer_state, step_number, config):
 
     noam_lr = compute_noam_learning_rate(step_number, d_model, warmup_steps)
 
-    new_optimizer_state = apply_adam_step_to_all_parameters(parameter_list,\
+    optimizer_state = apply_adam_step_to_all_parameters(parameter_list,\
     optimizer_state, noam_lr, **kwargs)
 
     return batch_loss.item()
