@@ -1025,6 +1025,25 @@ def mark_finished_beams(token_ids, finished_flags, end_token_id):
     finished_flags = torch.logical_or(finished_flags, curr_flags) 
     return finished_flags
 
-# Step 80 - select_best_finished_beam (not yet solved)
-# TODO: implement
+# Step 80 - select_best_finished_beam
+def select_best_finished_beam(finished_sequences, finished_scores, alpha):
+    # TODO: return the finished beam with the highest length-penalized score
+    
+    maxi = float('-inf')
+    max_sequence = None 
+
+    for i, seq in enumerate(finished_sequences):
+
+        seq_len_i = len(seq)
+        si = finished_scores[i]
+
+        norm_score = si / compute_length_penalty(seq_len_i, alpha)
+
+        if norm_score > maxi:
+            max_sequence = seq
+            maxi = norm_score
+    return {
+        "sequence" : max_sequence,
+        "score" : maxi
+    }
 
