@@ -972,8 +972,32 @@ def compute_candidate_scores(beam_scores, next_token_log_probs):
     # TODO: add each beam's running log-prob to its row of next-token log probs.
     return next_token_log_probs + beam_scores.unsqueeze(-1)
 
-# Step 77 - select_top_k_candidates (not yet solved)
-# TODO: implement
+# Step 77 - select_top_k_candidates
+import torch
+
+def select_top_k_candidates(candidate_scores, k):
+    # TODO: pick the top k (beam_index, token_id, score) triples from candidate_scores
+    n_batch, V = candidate_scores.shape
+
+    flattend_candidate_scores = candidate_scores.flatten()
+
+    scores , indices = torch.topk(flattend_candidate_scores, k=k, largest=True, sorted=True)
+
+    beam_indices = []
+    token_ids = []
+
+    for i in indices:
+        beam_idx = i // V
+        token_id = i % V 
+
+        beam_indices.append(beam_idx)
+        token_ids.append(token_id)
+    
+    return {
+        "beam_indices" : torch.tensor(beam_indices, dtype=torch.long),
+        "token_ids" : torch.tensor(token_ids, dtype=torch.long),
+        "scores": scores.to(dtype=torch.float64)
+    }
 
 # Step 78 - append_tokens_to_beam_sequences (not yet solved)
 # TODO: implement
