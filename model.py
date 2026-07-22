@@ -863,6 +863,8 @@ def compute_batch_training_loss(src_batch, tgt_batch, model_params, config):
     # print(model_params.keys())
     # print(tgt_batch.shape)
 
+    
+
     model_params['token_embedding'] = torch.cat([model_params['src_embedding'] ,\
                                         model_params['tgt_embedding'] ])
     model_params['token_embedding'].retain_grad()
